@@ -2,6 +2,9 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
+using System.Collections.Generic;
+using System.Diagnostics;
+
 namespace _316TermProject
 {
 	public class Game1 : Game
