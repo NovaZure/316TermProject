@@ -11,7 +11,7 @@ namespace _316TermProject
 	{
 		private GraphicsDeviceManager _graphics;
 		private SpriteBatch _spriteBatch;
-
+		//THIS IS A COMMENT HELLO
 		Vector3 cameraPos;
 		Vector3 playerPos;
 
