@@ -22,7 +22,11 @@ namespace _316TermProject
 		Vector3 barrelInitPos;
 		List<Vector3> barrelPos;
 
+		Vector3 alleyInitPos;
+		List<Vector3> alleyPos;
+
 		Model player;
+		Model alley1;
 		Model barrel;
 
 		float timer;
@@ -40,11 +44,16 @@ namespace _316TermProject
 		{
 			// TODO: Add your initialization logic here
 			playerPos = Vector3.Zero;
-			cameraPos = new Vector3(playerPos.X, 10, 20);
+			cameraPos = new Vector3(playerPos.X, 4, 12);
 			playerMovSpeed = 0.1f;
 
 			barrelPos = new List<Vector3>();
 			barrelInitPos = new Vector3(playerPos.X + 20, 0, 0); // make the init. positive respect to player
+
+			alleyPos = new List<Vector3>();
+			alleyInitPos = new Vector3(0, 0, -2);
+			alleyPos.Add(alleyInitPos);
+
 			timer = 0f;
 			gameOver = false;
 
@@ -55,7 +64,8 @@ namespace _316TermProject
 		{
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 
-			//player = Content.Load<Model>("Animal_Rigged_Zebu_01");
+			player = Content.Load<Model>("Player");
+			alley1 = Content.Load<Model>("AlleyTest");
 			//barrel = Content.Load<Model>("Barrel_Sealed_01");
 
 			//gameFont = Content.Load<SpriteFont>("Font");
@@ -70,15 +80,18 @@ namespace _316TermProject
 			
 			if (!gameOver)
 			{
+				kState = Keyboard.GetState();
+
 				// Le funny hack to convert keypresses into data similar to joystick axes
 				Vector2 inpDir = new Vector2(
 				((kState.IsKeyDown(Keys.A)) ? -1 : 0) + ((kState.IsKeyDown(Keys.D)) ? 1 : 0),
 				((kState.IsKeyDown(Keys.W)) ? 1 : 0) + ((kState.IsKeyDown(Keys.S)) ? -1 : 0)
 				);
 
+				#region Player movement
+				Vector3 moveVec = new Vector3(playerMovSpeed, 0, 0);
 
 				// Player left/right movement
-				Vector3 moveVec = new Vector3(playerMovSpeed, 0, 0);
 				if (kState.IsKeyDown(Keys.Left))
 				{
 					playerPos -= moveVec;
@@ -90,9 +103,11 @@ namespace _316TermProject
 					cameraPos += moveVec;
 				}
 
+				Debug.WriteLine(playerPos);
+
 				// Player jump calculations
 				Vector3 jumpVec = new Vector3(0, 0.356f, 0);
-				Vector3 decelerateVec = new Vector3(0, -0.009f, 0);
+				Vector3 decelerateVec = new Vector3(0, -0.012f, 0);
 				// Check for jump input, assign player velocity
 				if (kState.IsKeyDown(Keys.Space) && !isJumping)
 				{
@@ -112,6 +127,7 @@ namespace _316TermProject
 					isJumping = false;
 					playerPos.Y = 0.0f;
 				}
+				#endregion
 
 				// update timer
 				timer += (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -124,9 +140,10 @@ namespace _316TermProject
 		{
 			GraphicsDevice.Clear(Color.CornflowerBlue);
 
+			#region Proj/View Matrices
 			Matrix proj = Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(60),
-				1,
+				1.5f,
 				0.001f,
 				1000f);
 
@@ -135,20 +152,58 @@ namespace _316TermProject
 				new Vector3(playerPos.X, 0, 0),
 				new Vector3(0, 1, 0)
 				);
+			#endregion
 
-			//SRT - scale, rotate, translate
-			Matrix world = Matrix.CreateScale(0.005f)
-				* Matrix.CreateRotationY(MathHelper.ToRadians(90))
+			#region Draw Player
+			//how the model is positioned in the world
+			// SRT -> Scale*Rotation*Translation
+			Matrix world = Matrix.CreateScale(0.8f)
 				* Matrix.CreateTranslation(playerPos);
 
-			//player.Draw(world, view, proj);
+			foreach (ModelMesh mesh in player.Meshes)
+			{
+				foreach (BasicEffect effect in mesh.Effects)
+				{
+					effect.World = world;
+					effect.View = view;
+					effect.Projection = proj;
+					effect.EnableDefaultLighting();
+					//effect.LightingEnabled = true; // turn on the lighting subsystem.
+					//effect.EmissiveColor = new Vector3(0.8f, 0.8f, 0.8f);
+				}
+				mesh.Draw();
+			}
+			#endregion
 
+			//There's a lot of stuff in here about barrels. We could just use this for obstacles
 			foreach (Vector3 pos in barrelPos)
 			{
 				world = Matrix.CreateScale(0.1f)
 					* Matrix.CreateTranslation(pos);
 				//barrel.Draw(world, view, proj);
 			}
+
+			#region Draw Alleys
+			foreach (Vector3 pos in alleyPos)
+			{
+				world = Matrix.CreateScale(4f)
+					* Matrix.CreateTranslation(pos)
+					* Matrix.CreateRotationX(MathHelper.ToRadians(-90));
+
+				//Draw each mesh with basic effects (not sure if this is set up right)
+				foreach (ModelMesh mesh in alley1.Meshes)
+				{
+					foreach (BasicEffect effect in mesh.Effects)
+					{
+						effect.World = world;
+						effect.View = view;
+						effect.Projection = proj;
+						effect.EnableDefaultLighting();
+					}
+					mesh.Draw();
+				}
+			}
+			#endregion
 
 			base.Draw(gameTime);
 		}
