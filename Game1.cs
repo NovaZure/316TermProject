@@ -11,7 +11,7 @@ namespace _316TermProject
 	{
 		private GraphicsDeviceManager _graphics;
 		private SpriteBatch _spriteBatch;
-		//THIS IS A COMMENT HELLO
+
 		Vector3 cameraPos;
 		Vector3 playerPos;
 
@@ -28,6 +28,7 @@ namespace _316TermProject
 		Model player;
 		Model alley1;
 		Model barrel;
+		Model trashBag, dumpster, dumpsterEmpty;
 
 		float timer;
 		bool gameOver;
@@ -67,6 +68,9 @@ namespace _316TermProject
 			player = Content.Load<Model>("Player");
 			alley1 = Content.Load<Model>("AlleyTest");
 			//barrel = Content.Load<Model>("Barrel_Sealed_01");
+			trashBag = Content.Load<Model>("trashBag");
+			dumpster = Content.Load<Model>("dumpster");
+			dumpsterEmpty = Content.Load<Model>("dumpsterEmpty");
 
 			//gameFont = Content.Load<SpriteFont>("Font");
 			//largeGameFont = Content.Load<SpriteFont>("LargeF");
