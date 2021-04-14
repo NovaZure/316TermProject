@@ -18,16 +18,13 @@ namespace _316TermProject
 		float playerMovSpeed;
 		Vector3 playerJumpAccel;
 		bool isJumping = false;
-		
-		Vector3 barrelInitPos;
-		List<Vector3> barrelPos;
 
-		Vector3 alleyInitPos;
+		List<Obstacle> obstacles;
+
 		List<Vector3> alleyPos;
 
 		Model player;
 		Model alley1;
-		Model barrel;
 		Model trashBag, dumpster, dumpsterEmpty;
 
 		float timer;
@@ -48,12 +45,13 @@ namespace _316TermProject
 			cameraPos = new Vector3(playerPos.X, 4, 12);
 			playerMovSpeed = 0.1f;
 
-			barrelPos = new List<Vector3>();
-			barrelInitPos = new Vector3(playerPos.X + 20, 0, 0); // make the init. positive respect to player
+			obstacles = new List<Obstacle>();
+			//TEST OBSTACLE
+			obstacles.Add(new Obstacle(new Vector3(0, 30, -2)));
 
 			alleyPos = new List<Vector3>();
-			alleyInitPos = new Vector3(0, 0, -2);
-			alleyPos.Add(alleyInitPos);
+			alleyPos.Add(new Vector3(0, 0, -2));
+			alleyPos.Add(new Vector3(0, 18, -2));
 
 			timer = 0f;
 			gameOver = false;
@@ -67,7 +65,6 @@ namespace _316TermProject
 
 			player = Content.Load<Model>("Player");
 			alley1 = Content.Load<Model>("AlleyTest");
-			//barrel = Content.Load<Model>("Barrel_Sealed_01");
 			trashBag = Content.Load<Model>("trashBag");
 			dumpster = Content.Load<Model>("dumpster");
 			dumpsterEmpty = Content.Load<Model>("dumpsterEmpty");
@@ -107,7 +104,11 @@ namespace _316TermProject
 					cameraPos += moveVec;
 				}
 
-				Debug.WriteLine(playerPos);
+				if (playerPos.X > 3) { playerPos.X = 3; cameraPos.X = 3; }
+				else if (playerPos.X < -3) { playerPos.X = -3; cameraPos.X = -3; }
+
+				//DEBUG LOG PLAYER POS
+				//Debug.WriteLine(playerPos);
 
 				// Player jump calculations
 				Vector3 jumpVec = new Vector3(0, 0.356f, 0);
@@ -133,7 +134,14 @@ namespace _316TermProject
 				}
 				#endregion
 
-				// update timer
+				//Update the obstacles
+				foreach (Obstacle o in obstacles)
+				{
+					o.Update(gameTime);
+				}
+
+				// Update Timer
+				// Is this supposed to be +=? Or should it just be =
 				timer += (float)gameTime.ElapsedGameTime.TotalSeconds;
 			}
 
@@ -179,14 +187,73 @@ namespace _316TermProject
 			}
 			#endregion
 
-			//There's a lot of stuff in here about barrels. We could just use this for obstacles
-			foreach (Vector3 pos in barrelPos)
+			#region Draw Obstacles
+			foreach (Obstacle o in obstacles)
 			{
-				world = Matrix.CreateScale(0.1f)
-					* Matrix.CreateTranslation(pos);
-				//barrel.Draw(world, view, proj);
-			}
+				if (o.Type == Obstacle.ObstacleType.Dumpster)
+				{
+					world = Matrix.CreateScale(4f)
+					* Matrix.CreateTranslation(o.Pos)
+					* Matrix.CreateRotationX(MathHelper.ToRadians(-90));
 
+					//Draw each mesh with basic effects (not sure if this is set up right)
+					foreach (ModelMesh mesh in dumpster.Meshes)
+					{
+						foreach (BasicEffect effect in mesh.Effects)
+						{
+							effect.World = world;
+							effect.View = view;
+							effect.Projection = proj;
+							effect.EnableDefaultLighting();
+						}
+						mesh.Draw();
+					}
+				}
+
+				else if (o.Type == Obstacle.ObstacleType.DumpsterEmpty)
+				{
+					world = Matrix.CreateScale(4f)
+					* Matrix.CreateTranslation(o.Pos)
+					* Matrix.CreateRotationX(MathHelper.ToRadians(-90));
+
+					//Draw each mesh with basic effects (not sure if this is set up right)
+					foreach (ModelMesh mesh in dumpsterEmpty.Meshes)
+					{
+						foreach (BasicEffect effect in mesh.Effects)
+						{
+							effect.World = world;
+							effect.View = view;
+							effect.Projection = proj;
+							effect.EnableDefaultLighting();
+						}
+						mesh.Draw();
+					}
+				}
+
+				else if (o.Type == Obstacle.ObstacleType.TrashBag)
+				{
+
+					world = Matrix.CreateScale(5f)
+					* Matrix.CreateTranslation(o.Pos)
+					* Matrix.CreateRotationX(MathHelper.ToRadians(-90));
+
+					//Draw each mesh with basic effects (not sure if this is set up right)
+					foreach (ModelMesh mesh in trashBag.Meshes)
+					{
+						foreach (BasicEffect effect in mesh.Effects)
+						{
+							effect.World = world;
+							effect.View = view;
+							effect.Projection = proj;
+							effect.EnableDefaultLighting();
+						}
+						mesh.Draw();
+					}
+				}
+			}
+			#endregion
+
+			//Alleys should probably be drawn last, as they are the background
 			#region Draw Alleys
 			foreach (Vector3 pos in alleyPos)
 			{
