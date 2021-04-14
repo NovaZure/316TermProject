@@ -19,7 +19,7 @@ namespace _316TermProject
 		sbyte playerDesiredLane;
         float[] lanePositionConversions = { -3, 0, 3 };
 
-		readonly sbyte MOVEMENT_FRAME_SPEED = 10;
+		const sbyte MOVEMENT_FRAME_SPEED = 10;
 		sbyte movementFrameCount;
 
 		Vector3 playerJumpAccel;
@@ -49,14 +49,15 @@ namespace _316TermProject
 			playerPos = Vector3.Zero;
 			playerLane = 0;
 			cameraPos = new Vector3(playerPos.X, 4, 12);
-
+			
 			obstacles = new List<Obstacle>();
 			//TEST OBSTACLE
-			obstacles.Add(new Obstacle(new Vector3(0, 30, -2)));
-
+			obstacles.Add(new Obstacle(new Vector3(0, 0, -2)));
+			
 			alleyPos = new List<Vector3>();
 			alleyPos.Add(new Vector3(0, 0, -2));
 			alleyPos.Add(new Vector3(0, 18, -2));
+			alleyPos.Add(new Vector3(0, 18*2, -2));
 
 			gameOver = false;
 
@@ -231,7 +232,7 @@ namespace _316TermProject
 				if (o.Type == Obstacle.ObstacleType.Dumpster)
 				{
 					world = Matrix.CreateScale(4f)
-					* Matrix.CreateTranslation(o.Pos)
+					* Matrix.CreateTranslation(o.AbsolutePosition)
 					* Matrix.CreateRotationX(MathHelper.ToRadians(-90));
 
 					//Draw each mesh with basic effects (not sure if this is set up right)
@@ -251,7 +252,7 @@ namespace _316TermProject
 				else if (o.Type == Obstacle.ObstacleType.DumpsterEmpty)
 				{
 					world = Matrix.CreateScale(4f)
-					* Matrix.CreateTranslation(o.Pos)
+					* Matrix.CreateTranslation(o.AbsolutePosition)
 					* Matrix.CreateRotationX(MathHelper.ToRadians(-90));
 
 					//Draw each mesh with basic effects (not sure if this is set up right)
@@ -272,7 +273,7 @@ namespace _316TermProject
 				{
 
 					world = Matrix.CreateScale(5f)
-					* Matrix.CreateTranslation(o.Pos)
+					* Matrix.CreateTranslation(o.AbsolutePosition)
 					* Matrix.CreateRotationX(MathHelper.ToRadians(-90));
 
 					//Draw each mesh with basic effects (not sure if this is set up right)
