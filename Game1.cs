@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -13,9 +12,16 @@ namespace _316TermProject
 		private SpriteBatch _spriteBatch;
 
 		Vector3 cameraPos;
-		Vector3 playerPos;
+        Vector3 playerPos;
 
-		float playerMovSpeed;
+		sbyte inputDirection;
+		sbyte playerLane;
+		sbyte playerDesiredLane;
+        float[] lanePositionConversions = { -3, 0, 3 };
+
+		readonly sbyte MOVEMENT_FRAME_SPEED = 10;
+		sbyte movementFrameCount;
+
 		Vector3 playerJumpAccel;
 		bool isJumping = false;
 
@@ -27,7 +33,6 @@ namespace _316TermProject
 		Model alley1;
 		Model trashBag, dumpster, dumpsterEmpty;
 
-		float timer;
 		bool gameOver;
 
 		KeyboardState kState;
@@ -42,8 +47,8 @@ namespace _316TermProject
 		{
 			// TODO: Add your initialization logic here
 			playerPos = Vector3.Zero;
+			playerLane = 0;
 			cameraPos = new Vector3(playerPos.X, 4, 12);
-			playerMovSpeed = 0.1f;
 
 			obstacles = new List<Obstacle>();
 			//TEST OBSTACLE
@@ -53,7 +58,6 @@ namespace _316TermProject
 			alleyPos.Add(new Vector3(0, 0, -2));
 			alleyPos.Add(new Vector3(0, 18, -2));
 
-			timer = 0f;
 			gameOver = false;
 
 			base.Initialize();
@@ -83,35 +87,71 @@ namespace _316TermProject
 			{
 				kState = Keyboard.GetState();
 
-				// Le funny hack to convert keypresses into data similar to joystick axes
-				Vector2 inpDir = new Vector2(
-				((kState.IsKeyDown(Keys.A)) ? -1 : 0) + ((kState.IsKeyDown(Keys.D)) ? 1 : 0),
-				((kState.IsKeyDown(Keys.W)) ? 1 : 0) + ((kState.IsKeyDown(Keys.S)) ? -1 : 0)
-				);
+                #region Player movement
 
-				#region Player movement
-				Vector3 moveVec = new Vector3(playerMovSpeed, 0, 0);
+                #region Lane movement
 
-				// Player left/right movement
-				if (kState.IsKeyDown(Keys.Left))
+                // Obtain desired movement based on all keys
+                // Except if we are already moving, or are jumping
+                if (movementFrameCount == 0 && !isJumping)
+                    inputDirection = (sbyte)(((kState.IsKeyDown(Keys.A) || kState.IsKeyDown(Keys.Left)) ? -1 : 0)
+                + ((kState.IsKeyDown(Keys.D) || kState.IsKeyDown(Keys.Right)) ? 1 : 0));
+                else
+                    inputDirection = 0;
+
+				if (playerLane + inputDirection > 1 || playerLane + inputDirection < -1)
+					inputDirection = 0;
+
+				// Handle input
+				if (playerDesiredLane != playerLane)
 				{
-					playerPos -= moveVec;
-					cameraPos -= moveVec;
+					// If movementFrameCount == 0, we have yet to handle this movement
+					if (movementFrameCount == 0)
+					{
+						// Update movementFrameCount so movement can be handled
+						movementFrameCount = MOVEMENT_FRAME_SPEED;
+						Debug.WriteLine("Initiating movement from " + playerLane + " to " + playerDesiredLane);
+					}
 				}
-				else if (kState.IsKeyDown(Keys.Right))
-				{
-					playerPos += moveVec;
-					cameraPos += moveVec;
+				else
+                {
+					// Check for movement requests, only if we know no movement has been requested
+					// Otherwise, movement requests are wiped as soon as the input changes
+					playerDesiredLane = (sbyte)(playerLane + inputDirection);
 				}
 
-				if (playerPos.X > 3) { playerPos.X = 3; cameraPos.X = 3; }
-				else if (playerPos.X < -3) { playerPos.X = -3; cameraPos.X = -3; }
+				// Perform movement 
+				if (movementFrameCount > 0)
+                {
+					// invert to count from 0 to MOVEMENT_FRAME_SPEED
+					double timeCurrent = MOVEMENT_FRAME_SPEED - movementFrameCount; 
+					// convert lane data to the real position
+					double beginningValue = lanePositionConversions[playerLane + 1];
+					// calculate delta as endValue (desired) - beginningValue;
+					double deltaValue = lanePositionConversions[playerDesiredLane + 1] - beginningValue;
+					// length of time the entire movement will take
+					double timeDuration = MOVEMENT_FRAME_SPEED;
+					// calculate tween. current tween is outExpo
+					double tweenCalc = -deltaValue * ((timeCurrent = timeCurrent / timeDuration - 1) * timeCurrent * timeCurrent * timeCurrent - 1) + beginningValue;
 
-				//DEBUG LOG PLAYER POS
-				//Debug.WriteLine(playerPos);
+					Debug.WriteLine("Calculating tween data from " + beginningValue + " to " + beginningValue + deltaValue);
+					Debug.WriteLine("Frame " + timeCurrent + ": " + tweenCalc);
 
-				// Player jump calculations
-				Vector3 jumpVec = new Vector3(0, 0.356f, 0);
+
+					playerPos.X = (float)(tweenCalc);
+					cameraPos.X = (float)(tweenCalc);
+
+					movementFrameCount--;
+					if (movementFrameCount == 0)
+						playerLane = playerDesiredLane;
+				}
+
+                #endregion
+
+                #region Jump movement
+
+                // Player jump calculations
+                Vector3 jumpVec = new Vector3(0, 0.356f * (9/12.0f), 0);
 				Vector3 decelerateVec = new Vector3(0, -0.012f, 0);
 				// Check for jump input, assign player velocity
 				if (kState.IsKeyDown(Keys.Space) && !isJumping)
@@ -134,15 +174,13 @@ namespace _316TermProject
 				}
 				#endregion
 
+				#endregion
+
 				//Update the obstacles
 				foreach (Obstacle o in obstacles)
 				{
 					o.Update(gameTime);
 				}
-
-				// Update Timer
-				// Is this supposed to be +=? Or should it just be =
-				timer += (float)gameTime.ElapsedGameTime.TotalSeconds;
 			}
 
 			base.Update(gameTime);
