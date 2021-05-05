@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace _316TermProject
 {
-	public class Game1 : Game
+    public class Game1 : Game
 	{
 		private GraphicsDeviceManager _graphics;
 		private SpriteBatch _spriteBatch;
@@ -31,7 +31,7 @@ namespace _316TermProject
 
 		Model player;
 		Model alley1;
-		Model trashBag, dumpster, dumpsterEmpty;
+		Model trashBag, dumpster;
 
 		bool gameOver;
 
@@ -68,11 +68,10 @@ namespace _316TermProject
 		{
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 
-			player = Content.Load<Model>("Player");
+			player = Content.Load<Model>("sk8erBoi");
 			alley1 = Content.Load<Model>("AlleyTest");
 			trashBag = Content.Load<Model>("trashBag");
 			dumpster = Content.Load<Model>("dumpster");
-			dumpsterEmpty = Content.Load<Model>("dumpsterEmpty");
 
 			//gameFont = Content.Load<SpriteFont>("Font");
 			//largeGameFont = Content.Load<SpriteFont>("LargeF");
@@ -208,7 +207,9 @@ namespace _316TermProject
 			#region Draw Player
 			//how the model is positioned in the world
 			// SRT -> Scale*Rotation*Translation
-			Matrix world = Matrix.CreateScale(0.8f)
+			Matrix world = Matrix.CreateScale(0.33f)
+				* Matrix.CreateRotationX(MathHelper.ToRadians(-90))
+				* Matrix.CreateRotationY(MathHelper.ToRadians(-90))
 				* Matrix.CreateTranslation(playerPos);
 
 			foreach (ModelMesh mesh in player.Meshes)
@@ -244,26 +245,7 @@ namespace _316TermProject
 							effect.View = view;
 							effect.Projection = proj;
 							effect.EnableDefaultLighting();
-						}
-						mesh.Draw();
-					}
-				}
-
-				else if (o.Type == Obstacle.ObstacleType.DumpsterEmpty)
-				{
-					world = Matrix.CreateScale(4f)
-					* Matrix.CreateTranslation(o.AbsolutePosition)
-					* Matrix.CreateRotationX(MathHelper.ToRadians(-90));
-
-					//Draw each mesh with basic effects (not sure if this is set up right)
-					foreach (ModelMesh mesh in dumpsterEmpty.Meshes)
-					{
-						foreach (BasicEffect effect in mesh.Effects)
-						{
-							effect.World = world;
-							effect.View = view;
-							effect.Projection = proj;
-							effect.EnableDefaultLighting();
+							effect.DiffuseColor = new Vector3(0, (float)0.3, 0);
 						}
 						mesh.Draw();
 					}
