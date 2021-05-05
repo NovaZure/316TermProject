@@ -82,7 +82,7 @@ namespace _316TermProject
 			if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
 				Exit();
 
-			
+			Debug.WriteLine(playerPos);
 			if (!gameOver)
 			{
 				kState = Keyboard.GetState();
@@ -134,7 +134,7 @@ namespace _316TermProject
 					// calculate tween. current tween is outExpo
 					double tweenCalc = -deltaValue * ((timeCurrent = timeCurrent / timeDuration - 1) * timeCurrent * timeCurrent * timeCurrent - 1) + beginningValue;
 
-					Debug.WriteLine("Calculating tween data from " + beginningValue + " to " + beginningValue + deltaValue);
+					Debug.WriteLine("Calculating tween data from " + beginningValue + " to " + (beginningValue + deltaValue));
 					Debug.WriteLine("Frame " + timeCurrent + ": " + tweenCalc);
 
 
@@ -180,6 +180,24 @@ namespace _316TermProject
 				foreach (Obstacle o in obstacles)
 				{
 					o.Update(gameTime);
+				}
+			}
+
+			//Check for collisions
+			//For each obstacle that exists
+			foreach (Obstacle o in obstacles)
+			{
+				//Check if the player's hitbox collides with an obstacle
+				//They can only collide in the same lane, and only within a certain distance.
+				if (o.LanePosition == playerLane && MathHelper.Distance(playerPos.Z, o.AbsolutePosition.Y) < 1.9)
+				{
+					//Before declaring a hit, check if the player is above the obstacle (jumping)
+					if (!(playerPos.Y > 1.4))
+					{
+						//Debug.WriteLine("hit");
+						//Debug.WriteLine(playerPos);
+						gameOver = true;
+					}
 				}
 			}
 
