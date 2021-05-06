@@ -28,7 +28,6 @@ namespace _316TermProject
 
 		List<Obstacle> obstacles;
 		List<Obstacle> reference_obstacles;
-		bool spawnObstacles;
 
 		List<Vector3> alleyPos;
 
@@ -63,8 +62,9 @@ namespace _316TermProject
 			reference_obstacles = new List<Obstacle>();
             reference_obstacles.Add(new Obstacle(new Vector3(0, 0, -2)));
 			reference_obstacles.Add(new Obstacle(new Vector3(0, 0, -2), -1, Obstacle.ObstacleType.DumpsterEmpty));
-            reference_obstacles.Add(new Obstacle(new Vector3(0, 0, -2), -1, Obstacle.ObstacleType.TrashBag));
-			reference_obstacles.Add(new Obstacle(new Vector3(0, 0, -2), -1, Obstacle.ObstacleType.coin));
+            reference_obstacles.Add(new Obstacle(new Vector3(0, 0, -1), -1, Obstacle.ObstacleType.TrashBag));
+			reference_obstacles.Add(new Obstacle(new Vector3(0, 0, 2), -1, Obstacle.ObstacleType.coin));
+			reference_obstacles.Add(new Obstacle(new Vector3(0, 0, 0), -1, Obstacle.ObstacleType.coin));
 			obstacles = new List<Obstacle>();
 
 			alleyPos = new List<Vector3>();
@@ -96,12 +96,15 @@ namespace _316TermProject
 		}
 
 		private const float delay = 2; // seconds
+		private float[] delays = new float[] { 1.0f, 1.0f, 1.0f, 0.8f, 0.8f, 0.6f, 0.6f, 0.4f, 0.2f };
 		private float remainingDelay = delay;
 
 		protected override void Update(GameTime gameTime)
 		{
 			if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
 				Exit();
+
+			Random rand = new Random();
 
 			//Debug.WriteLine(playerPos);
 			if (!gameOver)
@@ -204,7 +207,7 @@ namespace _316TermProject
 
 				if (remainingDelay <= 0)
                 {
-					remainingDelay = delay;
+					remainingDelay = delay * delays[rand.Next(0,delays.Length)];
 					obstacles.Add(new Obstacle(reference_obstacles));
                 }
 

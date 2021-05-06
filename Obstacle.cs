@@ -22,7 +22,7 @@ public class Obstacle
 
 	readonly Vector3 OBSTACLE_MOVEMENT_SPEED = new Vector3(0, 0.6f, 0);
 	readonly Vector3 OBSTACLE_POSITION_CONVERSION = new Vector3(2.5f, 0, 0);
-	readonly Vector3 OBSTACLE_RESET_DEPTHPOSITION = new Vector3(0, 30, 0);
+	readonly Vector3 OBSTACLE_RESET_DEPTHPOSITION = new Vector3(0, 50, 0);
 	public enum ObstacleType { TrashBag, Dumpster, DumpsterEmpty, coin };
 	ObstacleType type;
 
