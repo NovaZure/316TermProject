@@ -48,6 +48,7 @@ public class Obstacle
 		set { type = value; }
 	}
 
+	//Constructor for reference object initialization
 	public Obstacle(
 		Vector3 relativePosition,
 		sbyte lanePosition = -1,
@@ -59,11 +60,14 @@ public class Obstacle
 		lanePosition = LanePosition;
 		type = t;
 	}
+	//Constructor for actual object spawning
 	public Obstacle(List<Obstacle> pickable)
 	{
-		this = pickable[rand.Next(0, pickable.Count)];
-		this.LanePosition = (sbyte)(rand.Next(-1, 2));
-		this.depthPosition = OBSTACLE_RESET_DEPTHPOSITION;
+		int selected = rand.Next(0, pickable.Count);
+		LanePosition = (sbyte)(rand.Next(-1, 2));
+		relativePosition = pickable[selected].relativePosition;
+		type = pickable[selected].type;
+		depthPosition = OBSTACLE_RESET_DEPTHPOSITION;
 	}
 	public void Update(GameTime gameTime)
 	{

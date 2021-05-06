@@ -184,20 +184,23 @@ namespace _316TermProject
 					isJumping = false;
 					playerPos.Y = 0.0f;
 				}
-				#endregion
+                #endregion
 
-				#endregion
+                #endregion
 
-				//Update the obstacles
-				foreach (Obstacle o in obstacles)
+                #region Obstacle Handling
+                //Spawn new obstacles
+
+     //           if(CONDITION)
+     //           {
+					//obstacles.Add(new Obstacle(reference_obstacles));
+     //           }
+
+                //Update the obstacles
+                foreach (Obstacle o in obstacles)
 				{
 					o.Update(gameTime);
-
 				}
-
-				gameTimeText = gameTime.TotalGameTime.ToString();
-				if (gameTimeText.Length > 9)
-					gameTimeText = gameTimeText.Substring(3, gameTimeText.Length - 9);
 
 				//Check for collisions
 				//For each obstacle that exists
@@ -216,6 +219,14 @@ namespace _316TermProject
 						}
 					}
 				}
+
+                #endregion
+
+                gameTimeText = gameTime.TotalGameTime.ToString();
+				if (gameTimeText.Length > 9)
+					gameTimeText = gameTimeText.Substring(3, gameTimeText.Length - 9);
+
+				
 			}
 			base.Update(gameTime);
 		}
