@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -33,7 +34,7 @@ namespace _316TermProject
 
 		Model player;
 		Model alley1;
-		Model trashBag, dumpster;
+		Model trashBag, dumpster, coin, dumpsterEmpty;
 
 		Texture2D uiUNDERLAY;
 		SpriteFont uiHEAD;
@@ -60,7 +61,10 @@ namespace _316TermProject
 			cameraPos = new Vector3(playerPos.X, 4, 12);
 
 			reference_obstacles = new List<Obstacle>();
-			reference_obstacles.Add(new Obstacle(new Vector3(0, 0, -2)));
+            reference_obstacles.Add(new Obstacle(new Vector3(0, 0, -2)));
+			reference_obstacles.Add(new Obstacle(new Vector3(0, 0, -2), -1, Obstacle.ObstacleType.DumpsterEmpty));
+            reference_obstacles.Add(new Obstacle(new Vector3(0, 0, -2), -1, Obstacle.ObstacleType.TrashBag));
+			reference_obstacles.Add(new Obstacle(new Vector3(0, 0, -2), -1, Obstacle.ObstacleType.coin));
 			obstacles = new List<Obstacle>();
 
 			alleyPos = new List<Vector3>();
@@ -83,11 +87,16 @@ namespace _316TermProject
 			alley1 = Content.Load<Model>("AlleyTest");
 			trashBag = Content.Load<Model>("trashBag");
 			dumpster = Content.Load<Model>("dumpster");
+            dumpsterEmpty = Content.Load<Model>("dumpsterEmpty");
+			coin = Content.Load<Model>("coin");
 
 			uiUNDERLAY = Content.Load<Texture2D>("dev_ui-overlay");
 			uiHEAD = Content.Load<SpriteFont>("uiHead");
 			uiBODY = Content.Load<SpriteFont>("uiBody");
 		}
+
+		private const float delay = 2; // seconds
+		private float remainingDelay = delay;
 
 		protected override void Update(GameTime gameTime)
 		{
@@ -184,26 +193,32 @@ namespace _316TermProject
 					isJumping = false;
 					playerPos.Y = 0.0f;
 				}
-                #endregion
+				#endregion
 
-                #endregion
+				#endregion
 
-                #region Obstacle Handling
-                //Spawn new obstacles
+				#region Obstacle Handling
+				//Spawn new obstacles
+				float timer = (float)gameTime.ElapsedGameTime.TotalSeconds;
+				remainingDelay -= timer;
 
-     //           if(CONDITION)
-     //           {
-					//obstacles.Add(new Obstacle(reference_obstacles));
-     //           }
+				if (remainingDelay <= 0)
+                {
+					remainingDelay = delay;
+					obstacles.Add(new Obstacle(reference_obstacles));
+                }
 
-                //Update the obstacles
-                foreach (Obstacle o in obstacles)
+				//Update the obstacles
+				for (int i = 0; i < obstacles.Count; i++)
 				{
-					o.Update(gameTime);
+					obstacles[i].Update(gameTime);
+					if (obstacles[i].checkForOOB()) { obstacles[i] = null; obstacles.RemoveAt(i); }
 				}
 
 				//Check for collisions
 				//For each obstacle that exists
+				bool coin = false;
+				int remove = 0;
 				foreach (Obstacle o in obstacles)
 				{
 					//Check if the player's hitbox collides with an obstacle
@@ -211,13 +226,23 @@ namespace _316TermProject
 					if (o.LanePosition == playerLane && MathHelper.Distance(playerPos.Z, o.AbsolutePosition.Y) < 1.9)
 					{
 						//Before declaring a hit, check if the player is above the obstacle (jumping)
-						if (!(playerPos.Y > 1.4))
+						if (!(playerPos.Y > 1.4) && o.Type != Obstacle.ObstacleType.coin)
 						{
 							//Debug.WriteLine("hit");
 							//Debug.WriteLine(playerPos);
 							gameOver = true;
 						}
+                        else if (!(playerPos.Y > 1.4) && o.Type == Obstacle.ObstacleType.coin)
+                        {
+							remove = obstacles.IndexOf(o);
+							coin = true;
+                        }
 					}
+				}
+                if (coin)
+                {
+					obstacles[remove] = null; obstacles.RemoveAt(remove);
+					score++;
 				}
 
                 #endregion
@@ -267,7 +292,7 @@ namespace _316TermProject
 					effect.Projection = proj;
 					effect.EnableDefaultLighting();
 					//effect.LightingEnabled = true; // turn on the lighting subsystem.
-					//effect.EmissiveColor = new Vector3(0.8f, 0.8f, 0.8f);
+					effect.DiffuseColor = new Vector3(0.8f, 0, 0);
 				}
 				mesh.Draw();
 			}
@@ -313,6 +338,48 @@ namespace _316TermProject
 							effect.View = view;
 							effect.Projection = proj;
 							effect.EnableDefaultLighting();
+						}
+						mesh.Draw();
+					}
+				}
+
+				else if (o.Type == Obstacle.ObstacleType.DumpsterEmpty)
+                {
+					world = Matrix.CreateScale(4f)
+					* Matrix.CreateTranslation(o.AbsolutePosition)
+					* Matrix.CreateRotationX(MathHelper.ToRadians(-90));
+
+					//Draw each mesh with basic effects (not sure if this is set up right)
+					foreach (ModelMesh mesh in dumpsterEmpty.Meshes)
+					{
+						foreach (BasicEffect effect in mesh.Effects)
+						{
+							effect.World = world;
+							effect.View = view;
+							effect.Projection = proj;
+							effect.EnableDefaultLighting();
+							effect.DiffuseColor = new Vector3(0, (float)0.3, 0);
+						}
+						mesh.Draw();
+					}
+				}
+
+				else if (o.Type == Obstacle.ObstacleType.coin)
+                {
+					world = Matrix.CreateScale(1f)
+					* Matrix.CreateTranslation(o.AbsolutePosition)
+					* Matrix.CreateRotationX(MathHelper.ToRadians(-90));
+
+					//Draw each mesh with basic effects (not sure if this is set up right)
+					foreach (ModelMesh mesh in coin.Meshes)
+					{
+						foreach (BasicEffect effect in mesh.Effects)
+						{
+							effect.World = world;
+							effect.View = view;
+							effect.Projection = proj;
+							effect.EnableDefaultLighting();
+							effect.DiffuseColor = new Vector3(.9f, .9f, 0);
 						}
 						mesh.Draw();
 					}
