@@ -358,7 +358,7 @@ namespace _316TermProject
 							effect.View = view;
 							effect.Projection = proj;
 							effect.EnableDefaultLighting();
-							effect.DiffuseColor = new Vector3(0, (float)0.3, 0);
+							effect.DiffuseColor = new Vector3(0.1f, 0.1f, 0.5f);
 						}
 						mesh.Draw();
 					}
