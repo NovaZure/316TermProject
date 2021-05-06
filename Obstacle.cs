@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
@@ -9,7 +10,7 @@ public class Obstacle
 	// Position of the obstacle
 
 	// Lane of the Object
-	sbyte lanePosition;
+	sbyte lanePosition = -1;
 	// Position of the object relative to each lane
 	// Displacing a model becomes uniform no matter what lane its in
 	Vector3 relativePosition;
@@ -48,8 +49,8 @@ public class Obstacle
 	}
 
 	public Obstacle(
-		Vector3 relativePosition, 
-		sbyte lanePosition = 0,
+		Vector3 relativePosition,
+		sbyte lanePosition = -1,
 		ObstacleType t = ObstacleType.Dumpster
 	)
 	{
@@ -58,23 +59,24 @@ public class Obstacle
 		lanePosition = LanePosition;
 		type = t;
 	}
-
+	public Obstacle(List<Obstacle> pickable)
+	{
+		this = pickable[rand.Next(0, pickable.Count)];
+		this.LanePosition = (sbyte)(rand.Next(-1, 2));
+		this.depthPosition = OBSTACLE_RESET_DEPTHPOSITION;
+	}
 	public void Update(GameTime gameTime)
 	{
 		// Move the obstacle forward
 		depthPosition -= OBSTACLE_MOVEMENT_SPEED;
-
-		// If the obstacle is behind the player, despawn it (?).
-		//We could instead move the obstacle back in front of the player, possibly changing its type and lane as well.
-		//This means we would have a finite number of obstacle instances
-		if (depthPosition.Y < -10)
-		{
-			lanePosition = (sbyte)(rand.Next(-1, 2));
-			depthPosition = OBSTACLE_RESET_DEPTHPOSITION;
-		}
-
 		// Total all positional deltas into the AbsolutePosition
 		AbsolutePosition = (LanePosition * OBSTACLE_POSITION_CONVERSION) + RelativePosition + depthPosition;
-		Debug.WriteLine(AbsolutePosition + " | " + LanePosition + " | " + RelativePosition + " | " + depthPosition);
+		//Debug.WriteLine(AbsolutePosition + " | " + LanePosition + " | " + RelativePosition + " | " + depthPosition);
 	}
+
+	public bool checkForOOB()
+    {
+		return (depthPosition.Y < -10);
+	}
+
 }

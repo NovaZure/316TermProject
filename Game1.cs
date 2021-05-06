@@ -26,12 +26,22 @@ namespace _316TermProject
 		bool isJumping = false;
 
 		List<Obstacle> obstacles;
+		List<Obstacle> reference_obstacles;
+		bool spawnObstacles;
 
 		List<Vector3> alleyPos;
 
 		Model player;
 		Model alley1;
 		Model trashBag, dumpster;
+
+		Texture2D uiUNDERLAY;
+		SpriteFont uiHEAD;
+		SpriteFont uiBODY;
+		Vector2 screenCenter;
+
+		int score;
+		string gameTimeText;
 
 		bool gameOver;
 
@@ -45,21 +55,22 @@ namespace _316TermProject
 
 		protected override void Initialize()
 		{
-			// TODO: Add your initialization logic here
 			playerPos = Vector3.Zero;
 			playerLane = 0;
 			cameraPos = new Vector3(playerPos.X, 4, 12);
-			
+
+			reference_obstacles = new List<Obstacle>();
+			reference_obstacles.Add(new Obstacle(new Vector3(0, 0, -2)));
 			obstacles = new List<Obstacle>();
-			//TEST OBSTACLE
-			obstacles.Add(new Obstacle(new Vector3(0, 0, -2)));
-			
+
 			alleyPos = new List<Vector3>();
 			alleyPos.Add(new Vector3(0, 0, -2));
 			alleyPos.Add(new Vector3(0, 18, -2));
 			alleyPos.Add(new Vector3(0, 18*2, -2));
 
+			score = 0;
 			gameOver = false;
+			screenCenter = new Vector2(GraphicsDevice.Viewport.Width/2, GraphicsDevice.Viewport.Height/2);
 
 			base.Initialize();
 		}
@@ -73,8 +84,9 @@ namespace _316TermProject
 			trashBag = Content.Load<Model>("trashBag");
 			dumpster = Content.Load<Model>("dumpster");
 
-			//gameFont = Content.Load<SpriteFont>("Font");
-			//largeGameFont = Content.Load<SpriteFont>("LargeF");
+			uiUNDERLAY = Content.Load<Texture2D>("dev_ui-overlay");
+			uiHEAD = Content.Load<SpriteFont>("uiHead");
+			uiBODY = Content.Load<SpriteFont>("uiBody");
 		}
 
 		protected override void Update(GameTime gameTime)
@@ -82,7 +94,7 @@ namespace _316TermProject
 			if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
 				Exit();
 
-			Debug.WriteLine(playerPos);
+			//Debug.WriteLine(playerPos);
 			if (!gameOver)
 			{
 				kState = Keyboard.GetState();
@@ -110,7 +122,7 @@ namespace _316TermProject
 					{
 						// Update movementFrameCount so movement can be handled
 						movementFrameCount = MOVEMENT_FRAME_SPEED;
-						Debug.WriteLine("Initiating movement from " + playerLane + " to " + playerDesiredLane);
+						//Debug.WriteLine("Initiating movement from " + playerLane + " to " + playerDesiredLane);
 					}
 				}
 				else
@@ -134,8 +146,8 @@ namespace _316TermProject
 					// calculate tween. current tween is outExpo
 					double tweenCalc = -deltaValue * ((timeCurrent = timeCurrent / timeDuration - 1) * timeCurrent * timeCurrent * timeCurrent - 1) + beginningValue;
 
-					Debug.WriteLine("Calculating tween data from " + beginningValue + " to " + (beginningValue + deltaValue));
-					Debug.WriteLine("Frame " + timeCurrent + ": " + tweenCalc);
+					//Debug.WriteLine("Calculating tween data from " + beginningValue + " to " + (beginningValue + deltaValue));
+					//Debug.WriteLine("Frame " + timeCurrent + ": " + tweenCalc);
 
 
 					playerPos.X = (float)(tweenCalc);
@@ -180,33 +192,38 @@ namespace _316TermProject
 				foreach (Obstacle o in obstacles)
 				{
 					o.Update(gameTime);
-				}
-			}
 
-			//Check for collisions
-			//For each obstacle that exists
-			foreach (Obstacle o in obstacles)
-			{
-				//Check if the player's hitbox collides with an obstacle
-				//They can only collide in the same lane, and only within a certain distance.
-				if (o.LanePosition == playerLane && MathHelper.Distance(playerPos.Z, o.AbsolutePosition.Y) < 1.9)
+				}
+
+				gameTimeText = gameTime.TotalGameTime.ToString();
+				if (gameTimeText.Length > 9)
+					gameTimeText = gameTimeText.Substring(3, gameTimeText.Length - 9);
+
+				//Check for collisions
+				//For each obstacle that exists
+				foreach (Obstacle o in obstacles)
 				{
-					//Before declaring a hit, check if the player is above the obstacle (jumping)
-					if (!(playerPos.Y > 1.4))
+					//Check if the player's hitbox collides with an obstacle
+					//They can only collide in the same lane, and only within a certain distance.
+					if (o.LanePosition == playerLane && MathHelper.Distance(playerPos.Z, o.AbsolutePosition.Y) < 1.9)
 					{
-						//Debug.WriteLine("hit");
-						//Debug.WriteLine(playerPos);
-						gameOver = true;
+						//Before declaring a hit, check if the player is above the obstacle (jumping)
+						if (!(playerPos.Y > 1.4))
+						{
+							//Debug.WriteLine("hit");
+							//Debug.WriteLine(playerPos);
+							gameOver = true;
+						}
 					}
 				}
 			}
-
 			base.Update(gameTime);
 		}
 
 		protected override void Draw(GameTime gameTime)
 		{
 			GraphicsDevice.Clear(Color.CornflowerBlue);
+			GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
 			#region Proj/View Matrices
 			Matrix proj = Matrix.CreatePerspectiveFieldOfView(
@@ -314,6 +331,33 @@ namespace _316TermProject
 				}
 			}
 			#endregion
+
+			_spriteBatch.Begin();
+
+			#region Draw UI
+
+			int underlayXoffset = 40; string t;
+			if (!gameOver)
+			{
+				_spriteBatch.Draw(uiUNDERLAY, new Rectangle(0 - underlayXoffset, 0, 800 - underlayXoffset, 480), Color.White);
+				 t = "Score";
+				_spriteBatch.DrawString(uiHEAD, t, new Vector2(10, 15), Color.White);
+				_spriteBatch.DrawString(uiBODY, score.ToString(), new Vector2(15, 65), Color.White);
+
+				_spriteBatch.Draw(uiUNDERLAY, new Rectangle(0 + underlayXoffset, 0, 800 + underlayXoffset, 480), null, Color.White,
+					0.0f, new Vector2(), SpriteEffects.FlipHorizontally, 0.0f);
+				t = "Time";
+				_spriteBatch.DrawString(uiHEAD, t, new Vector2(800 - uiHEAD.MeasureString(t).X - 15, 15), Color.White);
+				_spriteBatch.DrawString(uiBODY, gameTimeText, new Vector2(800 - uiBODY.MeasureString(gameTimeText).X - 5, 65), Color.White);
+			}
+            else
+            {
+				t = "GAME OVER";
+				_spriteBatch.DrawString(uiHEAD, t, screenCenter - uiHEAD.MeasureString(t)/2, Color.White);
+			}
+			#endregion
+
+			_spriteBatch.End();
 
 			base.Draw(gameTime);
 		}

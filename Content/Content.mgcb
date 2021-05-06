@@ -32,6 +32,18 @@
 /processorParam:TextureFormat=Compressed
 /build:AlleyTest.fbx
 
+#begin dev_ui-overlay.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:dev_ui-overlay.png
+
 #begin dumpster.fbx
 /importer:FbxImporter
 /processor:ModelProcessor
@@ -126,4 +138,18 @@
 /processorParam:SwapWindingOrder=False
 /processorParam:TextureFormat=Compressed
 /build:trashBag.fbx
+
+#begin uiBody.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:uiBody.spritefont
+
+#begin uiHead.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:uiHead.spritefont
 
